@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react'
-import { CARD_HEIGHT, CARD_WIDTH } from '../constants/presets'
+import { useEffect, useState } from 'react'
+import { CARD_HEIGHT, CARD_WIDTH, POSTCARD_MESSAGE_FONT_STACK } from '../constants/presets'
 
 function strokeSvg(strokes) {
   return (strokes || [])
@@ -10,52 +10,112 @@ function strokeSvg(strokes) {
     .join('')
 }
 
-function postcardMarkup(postcard, side = 'front') {
+function postcardMarkup(postcard, side = 'front', { fill = false } = {}) {
   if (!postcard) return ''
+
+  const box = fill
+    ? 'position:relative;width:100%;height:100%;'
+    : `position:relative;width:${CARD_WIDTH}px;height:${CARD_HEIGHT}px;`
 
   if (side === 'front') {
     return `
-      <div style="position:relative;width:${CARD_WIDTH}px;height:${CARD_HEIGHT}px;border-radius:0;overflow:hidden;background:#fffdf7;border:1px solid rgba(0,0,0,0.14)">
-        <img src="${postcard.image_url}" style="width:100%;height:100%;object-fit:cover;filter:grayscale(1)" />
+      <div style="${box}border-radius:0;overflow:hidden;background:#fffdf7;border:1px solid rgba(0,0,0,0.14)">
+        <img src="${postcard.image_url}" style="display:block;width:100%;height:100%;object-fit:cover;filter:grayscale(1)" />
         <svg viewBox="0 0 ${CARD_WIDTH} ${CARD_HEIGHT}" style="position:absolute;inset:0;mix-blend-mode:multiply">${strokeSvg(postcard.front_drawing)}</svg>
       </div>
     `
   }
 
   const align = postcard.text_style?.align || 'left'
-  const size = postcard.text_style?.size || 18
+  const sizePt = postcard.text_style?.size ?? 13
 
   return `
-    <div style="position:relative;width:${CARD_WIDTH}px;height:${CARD_HEIGHT}px;border-radius:0;overflow:hidden;background:#fffdf7;border:1px solid rgba(0,0,0,0.14)">
+    <div style="${box}border-radius:0;overflow:hidden;background:#fffdf7;border:1px solid rgba(0,0,0,0.14)">
       <svg viewBox="0 0 ${CARD_WIDTH} ${CARD_HEIGHT}" style="position:absolute;inset:0">${strokeSvg(postcard.back_drawing)}</svg>
-      <div style="position:absolute;inset:16px;font-family:system-ui;font-size:${size}px;text-align:${align};white-space:pre-wrap;overflow:hidden;color:#141414">${(postcard.text_content || '').replaceAll('<', '&lt;').replaceAll('>', '&gt;')}</div>
+      <div style="position:absolute;inset:16px;font-family:${POSTCARD_MESSAGE_FONT_STACK};font-size:${sizePt}pt;text-align:${align};white-space:pre-wrap;overflow:auto;color:#141414">${(postcard.text_content || '').replaceAll('<', '&lt;').replaceAll('>', '&gt;')}</div>
     </div>
   `
 }
 
+function DownloadIcon() {
+  return (
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M12 3.75v10.5m0 0l-4-4m4 4l4-4M5.25 19.5h13.5"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
+function ShareIcon() {
+  return (
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
 function PostcardModal({ postcard, onClose, onDownload, onShare }) {
-  const [side, setSide] = useState('front')
-  const dynamicRotation = useMemo(() => (Math.random() > 0.5 ? 5 : -5), [])
+  const [side, setSide] = useState('back')
+
+  useEffect(() => {
+    setSide('back')
+  }, [postcard?.id])
 
   if (!postcard) return null
+
+  const saved = postcard.download_count || 0
+  const memoryLabel =
+    saved === 1 ? 'Memory saved 1 time' : `Memory saved ${saved} times`
 
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-card" onClick={(e) => e.stopPropagation()}>
         <div
           className="modal-postcard"
-          style={{ transform: `rotate(${postcard.rotation + dynamicRotation}deg)` }}
+          style={{ aspectRatio: `${CARD_WIDTH} / ${CARD_HEIGHT}` }}
         >
-          <div dangerouslySetInnerHTML={{ __html: postcardMarkup(postcard, side) }} />
+          <div
+            className="modal-postcard-fill"
+            dangerouslySetInnerHTML={{ __html: postcardMarkup(postcard, side, { fill: true }) }}
+          />
         </div>
-        <div className="modal-controls">
-          <button onClick={() => setSide(side === 'front' ? 'back' : 'front')}>
-            Flip to {side === 'front' ? 'back' : 'front'}
+        <button
+          type="button"
+          className="flip-btn flip-btn--labeled modal-flip-btn"
+          onClick={() => setSide(side === 'front' ? 'back' : 'front')}
+        >
+          Flip to {side === 'front' ? 'back' : 'front'}
+        </button>
+        <div className="modal-icon-actions">
+          <button
+            type="button"
+            className="modal-icon-btn"
+            onClick={() => onDownload(postcard)}
+            aria-label="Download"
+          >
+            <DownloadIcon />
           </button>
-          <button onClick={() => onDownload(postcard)}>Download</button>
-          <button onClick={() => onShare(postcard)}>Share</button>
-          <p>Downloaded {postcard.download_count || 0} times</p>
+          <button
+            type="button"
+            className="modal-icon-btn"
+            onClick={() => onShare(postcard)}
+            aria-label="Share"
+          >
+            <ShareIcon />
+          </button>
         </div>
+        <p className="modal-memory-caption">{memoryLabel}</p>
       </div>
     </div>
   )

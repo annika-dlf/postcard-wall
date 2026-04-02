@@ -1,4 +1,4 @@
-import { Group, Rect, Image as KonvaImage, Text } from 'react-konva'
+import { Group, Rect, Image as KonvaImage } from 'react-konva'
 import { useEffect, useState } from 'react'
 import { CARD_HEIGHT, CARD_WIDTH } from '../constants/presets'
 
@@ -61,17 +61,6 @@ function PostcardNode({
         stroke="rgba(0,0,0,0.12)"
         strokeWidth={1}
       />
-      {postcard.text_content ? (
-        <Text
-          text={postcard.text_content}
-          x={20}
-          y={CARD_HEIGHT + 8}
-          width={CARD_WIDTH - 40}
-          fontSize={12}
-          fill="rgba(0,0,0,0.6)"
-          ellipsis
-        />
-      ) : null}
     </Group>
   )
 }

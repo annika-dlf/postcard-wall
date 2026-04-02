@@ -6,7 +6,7 @@ create table if not exists public.postcards (
   front_drawing jsonb not null default '[]'::jsonb,
   back_drawing jsonb not null default '[]'::jsonb,
   text_content text not null default '',
-  text_style jsonb not null default '{"align":"left","size":18}'::jsonb,
+  text_style jsonb not null default '{"align":"left","size":13}'::jsonb,
   x double precision not null,
   y double precision not null,
   rotation double precision not null,

@@ -6,9 +6,11 @@ function PostcardEditor({ imageUrl, onSave, onClose }) {
   const [side, setSide] = useState('front')
   const [frontDrawing, setFrontDrawing] = useState([])
   const [textContent, setTextContent] = useState('')
-  const [textStyle, setTextStyle] = useState({ size: 18 })
 
-  const cardClass = useMemo(() => `flipper ${side === 'back' ? 'is-back' : ''}`, [side])
+  const cardClass = useMemo(
+    () => `flipper editor-flipper ${side === 'back' ? 'is-back' : ''}`,
+    [side],
+  )
 
   const save = () => {
     onSave({
@@ -16,7 +18,7 @@ function PostcardEditor({ imageUrl, onSave, onClose }) {
       front_drawing: frontDrawing,
       back_drawing: [],
       text_content: textContent,
-      text_style: { ...textStyle, align: 'left' },
+      text_style: { align: 'left', size: 13 },
     })
   }
 
@@ -40,16 +42,15 @@ function PostcardEditor({ imageUrl, onSave, onClose }) {
           </div>
           <div className="editor-face back-face">
             <div className="back-paper" />
-            <TextLayer
-              text={textContent}
-              style={textStyle}
-              onTextChange={setTextContent}
-              onStyleChange={setTextStyle}
-            />
+            <TextLayer text={textContent} onTextChange={setTextContent} />
           </div>
         </div>
 
-        <button className="flip-btn" onClick={() => setSide(side === 'front' ? 'back' : 'front')}>
+        <button
+          type="button"
+          className="flip-btn flip-btn--labeled"
+          onClick={() => setSide(side === 'front' ? 'back' : 'front')}
+        >
           Flip to {side === 'front' ? 'back' : 'front'}
         </button>
       </div>

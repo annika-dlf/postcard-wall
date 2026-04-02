@@ -1,6 +1,10 @@
 export const CARD_WIDTH = 300
 export const CARD_HEIGHT = 200
 
+/** Font for postcard back message (Google Fonts: Homemade Apple). */
+export const POSTCARD_MESSAGE_FONT_FAMILY = 'Homemade Apple'
+export const POSTCARD_MESSAGE_FONT_STACK = `'${POSTCARD_MESSAGE_FONT_FAMILY}', cursive`
+
 export const PRESET_IMAGES = [
   'https://images.unsplash.com/photo-1473187983305-f615310e7daa?auto=format&fit=crop&w=1200&q=80&sat=-100',
   'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1200&q=80&sat=-100',
