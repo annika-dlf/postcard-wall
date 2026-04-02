@@ -5,9 +5,8 @@ import TextLayer from './TextLayer'
 function PostcardEditor({ imageUrl, onSave, onClose }) {
   const [side, setSide] = useState('front')
   const [frontDrawing, setFrontDrawing] = useState([])
-  const [backDrawing, setBackDrawing] = useState([])
   const [textContent, setTextContent] = useState('')
-  const [textStyle, setTextStyle] = useState({ align: 'left', size: 18 })
+  const [textStyle, setTextStyle] = useState({ size: 18 })
 
   const cardClass = useMemo(() => `flipper ${side === 'back' ? 'is-back' : ''}`, [side])
 
@@ -15,9 +14,9 @@ function PostcardEditor({ imageUrl, onSave, onClose }) {
     onSave({
       image_url: imageUrl,
       front_drawing: frontDrawing,
-      back_drawing: backDrawing,
+      back_drawing: [],
       text_content: textContent,
-      text_style: textStyle,
+      text_style: { ...textStyle, align: 'left' },
     })
   }
 
@@ -41,7 +40,6 @@ function PostcardEditor({ imageUrl, onSave, onClose }) {
           </div>
           <div className="editor-face back-face">
             <div className="back-paper" />
-            <DrawingLayer value={backDrawing} onChange={setBackDrawing} />
             <TextLayer
               text={textContent}
               style={textStyle}

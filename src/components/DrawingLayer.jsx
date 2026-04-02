@@ -82,18 +82,38 @@ function DrawingLayer({ value, onChange, multiply = false }) {
           {SIZES.map((s) => (
             <button
               key={s}
-              className={size === s ? 'active' : ''}
+              className={`size-option ${size === s ? 'active' : ''}`}
               onClick={() => setSize(s)}
+              aria-label={`Brush size ${s}`}
+              title={`Brush size ${s}`}
             >
-              {s}px
+              <span className="size-dot" style={{ width: s + 4, height: s + 4 }} />
             </button>
           ))}
         </div>
-        <button onClick={() => setTool(tool === 'eraser' ? 'brush' : 'eraser')}>
-          {tool === 'eraser' ? 'Brush' : 'Eraser'}
+        <button
+          className={`icon-button ${tool === 'eraser' ? 'active' : ''}`}
+          onClick={() => setTool(tool === 'eraser' ? 'brush' : 'eraser')}
+          aria-label={tool === 'eraser' ? 'Use brush' : 'Use eraser'}
+          title={tool === 'eraser' ? 'Use brush' : 'Use eraser'}
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M14.4 3.4a2 2 0 0 1 2.8 0l3.4 3.4a2 2 0 0 1 0 2.8l-8.3 8.3a3 3 0 0 1-2.1.9H7.3a3 3 0 0 1-2.1-.9l-1.1-1.1a2 2 0 0 1 0-2.8z" />
+            <path d="M3 21h18" />
+          </svg>
         </button>
-        <button onClick={undo}>Undo</button>
-        <button onClick={redo}>Redo</button>
+        <button className="icon-button" onClick={undo} aria-label="Undo" title="Undo">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M9 7 4 12l5 5" />
+            <path d="M20 12H4" />
+          </svg>
+        </button>
+        <button className="icon-button" onClick={redo} aria-label="Redo" title="Redo">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="m15 7 5 5-5 5" />
+            <path d="M4 12h16" />
+          </svg>
+        </button>
       </div>
 
       <svg

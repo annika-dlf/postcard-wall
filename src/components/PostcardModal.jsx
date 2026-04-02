@@ -15,7 +15,7 @@ function postcardMarkup(postcard, side = 'front') {
 
   if (side === 'front') {
     return `
-      <div style="position:relative;width:${CARD_WIDTH}px;height:${CARD_HEIGHT}px;border-radius:8px;overflow:hidden;background:#fffdf7;border:1px solid rgba(0,0,0,0.14)">
+      <div style="position:relative;width:${CARD_WIDTH}px;height:${CARD_HEIGHT}px;border-radius:0;overflow:hidden;background:#fffdf7;border:1px solid rgba(0,0,0,0.14)">
         <img src="${postcard.image_url}" style="width:100%;height:100%;object-fit:cover;filter:grayscale(1)" />
         <svg viewBox="0 0 ${CARD_WIDTH} ${CARD_HEIGHT}" style="position:absolute;inset:0;mix-blend-mode:multiply">${strokeSvg(postcard.front_drawing)}</svg>
       </div>
@@ -26,7 +26,7 @@ function postcardMarkup(postcard, side = 'front') {
   const size = postcard.text_style?.size || 18
 
   return `
-    <div style="position:relative;width:${CARD_WIDTH}px;height:${CARD_HEIGHT}px;border-radius:8px;overflow:hidden;background:#fffdf7;border:1px solid rgba(0,0,0,0.14)">
+    <div style="position:relative;width:${CARD_WIDTH}px;height:${CARD_HEIGHT}px;border-radius:0;overflow:hidden;background:#fffdf7;border:1px solid rgba(0,0,0,0.14)">
       <svg viewBox="0 0 ${CARD_WIDTH} ${CARD_HEIGHT}" style="position:absolute;inset:0">${strokeSvg(postcard.back_drawing)}</svg>
       <div style="position:absolute;inset:16px;font-family:system-ui;font-size:${size}px;text-align:${align};white-space:pre-wrap;overflow:hidden;color:#141414">${(postcard.text_content || '').replaceAll('<', '&lt;').replaceAll('>', '&gt;')}</div>
     </div>
