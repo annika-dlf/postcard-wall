@@ -1,0 +1,284 @@
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  background: #f4efe6;
+  color: #1a1a1a;
+}
+
+button {
+  border: 0;
+  border-radius: 10px;
+  background: #222;
+  color: #fff;
+  padding: 10px 14px;
+  font-weight: 600;
+}
+
+button:disabled {
+  opacity: 0.45;
+}
+
+button.ghost {
+  background: #e5dfd3;
+  color: #111;
+}
+
+.board-root {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.fab {
+  position: fixed;
+  right: 18px;
+  bottom: 20px;
+  width: 58px;
+  height: 58px;
+  border-radius: 999px;
+  font-size: 28px;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.22);
+  z-index: 30;
+}
+
+.sheet-overlay,
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 40;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+}
+
+.sheet {
+  width: 100%;
+  max-height: 90vh;
+  overflow: auto;
+  background: #f8f4ec;
+  border-radius: 18px 18px 0 0;
+  padding: 16px;
+}
+
+.image-grid {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.image-option {
+  padding: 0;
+  border: 2px solid transparent;
+  background: transparent;
+}
+
+.image-option img {
+  width: 100%;
+  aspect-ratio: 3/2;
+  object-fit: cover;
+  border-radius: 8px;
+  filter: grayscale(1);
+}
+
+.image-option.active {
+  border-color: #1f2937;
+}
+
+.sheet-actions,
+.editor-header,
+.editor-actions,
+.modal-controls {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.sheet-actions,
+.editor-header {
+  margin-top: 12px;
+  justify-content: space-between;
+}
+
+.editor-sheet {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.flipper {
+  position: relative;
+  width: min(96vw, 360px);
+  height: min(70vw, 240px);
+  transform-style: preserve-3d;
+  transition: transform 0.35s ease;
+}
+
+.flipper.is-back {
+  transform: rotateY(180deg);
+}
+
+.editor-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  background: #fffdf7;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid rgba(0, 0, 0, 0.14);
+}
+
+.back-face {
+  transform: rotateY(180deg);
+}
+
+.editor-base-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: grayscale(1);
+}
+
+.back-paper {
+  position: absolute;
+  inset: 0;
+  background: #fffefb;
+}
+
+.flip-btn {
+  width: fit-content;
+}
+
+.drawing-tool-wrap {
+  position: absolute;
+  inset: 0;
+}
+
+.drawing-tools {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  display: flex;
+  gap: 6px;
+  z-index: 5;
+  flex-wrap: wrap;
+}
+
+.drawing-tools button {
+  padding: 5px 7px;
+  font-size: 12px;
+  border-radius: 7px;
+}
+
+.swatches,
+.sizes,
+.align-options {
+  display: flex;
+  gap: 5px;
+}
+
+.swatch {
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  border: 2px solid #fff;
+}
+
+.swatch.active,
+.sizes .active,
+.align-options .active {
+  outline: 2px solid #111;
+}
+
+.drawing-surface {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+}
+
+.drawing-surface.multiply {
+  mix-blend-mode: multiply;
+}
+
+.text-layer-wrap {
+  position: absolute;
+  inset: 0;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.text-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.text-editor {
+  width: 100%;
+  flex: 1;
+  border: 0;
+  background: transparent;
+  resize: none;
+  outline: 0;
+}
+
+.modal-overlay {
+  align-items: center;
+}
+
+.modal-card {
+  width: min(94vw, 520px);
+  background: #f8f4ec;
+  border-radius: 16px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.modal-postcard {
+  align-self: center;
+  transition: transform 0.25s ease;
+}
+
+.modal-controls {
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.modal-controls p {
+  margin: 0;
+  width: 100%;
+  font-size: 13px;
+  color: rgba(0, 0, 0, 0.7);
+}
+
+@media (min-width: 768px) {
+  .sheet-overlay {
+    align-items: center;
+  }
+
+  .sheet {
+    max-width: 860px;
+    border-radius: 18px;
+  }
+
+  .image-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
