@@ -192,6 +192,16 @@ button.ghost {
   font-weight: 600;
 }
 
+.editor-footer-actions {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  margin-top: 12px;
+  padding-bottom: 16px;
+}
+
 .drawing-tool-wrap {
   position: absolute;
   inset: 0;
@@ -292,7 +302,6 @@ button.ghost {
   padding: 20px;
   display: flex;
   flex-direction: column;
-  justify-content: center;
   gap: 0;
   min-height: 0;
 }
@@ -304,14 +313,30 @@ button.ghost {
   gap: 8px;
 }
 
+.text-editor-scroll {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  overflow: auto;
+  box-sizing: border-box;
+}
+
+.text-editor-center-wrap {
+  min-height: 100%;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
 .text-editor {
   width: 100%;
-  flex: 0 1 auto;
-  max-height: 100%;
-  min-height: 0;
-  field-sizing: content;
+  max-width: 100%;
+  box-sizing: border-box;
   border: 0;
   background: transparent;
+  resize: none;
   outline: 0;
   font-family: 'Homemade Apple', cursive;
   font-size: 13pt;
@@ -320,7 +345,11 @@ button.ghost {
   padding: 0;
   margin: 0;
   overflow-x: hidden;
-  overflow-y: auto;
+  overflow-y: hidden;
+  overflow-wrap: break-word;
+  field-sizing: content;
+  min-height: 1.2em;
+  padding: 12px;
 }
 
 .modal-overlay {

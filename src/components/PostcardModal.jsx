@@ -26,13 +26,16 @@ function postcardMarkup(postcard, side = 'front', { fill = false } = {}) {
     `
   }
 
-  const align = postcard.text_style?.align || 'left'
   const sizePt = postcard.text_style?.size ?? 13
 
   return `
     <div style="${box}border-radius:0;overflow:hidden;background:#fffdf7;border:1px solid rgba(0,0,0,0.14)">
       <svg viewBox="0 0 ${CARD_WIDTH} ${CARD_HEIGHT}" style="position:absolute;inset:0">${strokeSvg(postcard.back_drawing)}</svg>
-      <div style="position:absolute;inset:16px;font-family:${POSTCARD_MESSAGE_FONT_STACK};font-size:${sizePt}pt;text-align:${align};white-space:pre-wrap;overflow:auto;color:#141414">${(postcard.text_content || '').replaceAll('<', '&lt;').replaceAll('>', '&gt;')}</div>
+      <div style="position:absolute;inset:16px;overflow:auto;box-sizing:border-box">
+        <div style="min-height:100%;width:100%;display:flex;align-items:center;justify-content:center;box-sizing:border-box">
+          <div style="font-family:${POSTCARD_MESSAGE_FONT_STACK};font-size:${sizePt}pt;text-align:center;white-space:pre-wrap;word-break:break-word;max-width:100%;color:#141414">${(postcard.text_content || '').replaceAll('<', '&lt;').replaceAll('>', '&gt;')}</div>
+        </div>
+      </div>
     </div>
   `
 }

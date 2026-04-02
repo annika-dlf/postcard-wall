@@ -203,7 +203,11 @@ function CanvasBoard() {
     wrapper.style.padding = '12px'
     wrapper.innerHTML = `<img src="${postcard.image_url}" width="${CARD_WIDTH}" height="${CARD_HEIGHT}" style="display:block;object-fit:cover;filter:grayscale(1);margin-bottom:12px" />
       <div style="width:${CARD_WIDTH}px;height:${CARD_HEIGHT}px;background:#fffdf7;border:1px solid rgba(0,0,0,0.1);position:relative;overflow:hidden">
-        <div style="position:absolute;inset:12px;font-family:${POSTCARD_MESSAGE_FONT_STACK};font-size:${postcard.text_style?.size ?? 13}pt;text-align:${postcard.text_style?.align || 'left'};white-space:pre-wrap;overflow:auto">${postcard.text_content || ''}</div>
+        <div style="position:absolute;inset:12px;overflow:auto;box-sizing:border-box">
+          <div style="min-height:100%;width:100%;display:flex;align-items:center;justify-content:center;box-sizing:border-box">
+            <div style="font-family:${POSTCARD_MESSAGE_FONT_STACK};font-size:${postcard.text_style?.size ?? 13}pt;text-align:center;white-space:pre-wrap;word-break:break-word;max-width:100%">${postcard.text_content || ''}</div>
+          </div>
+        </div>
       </div>`
     document.body.appendChild(wrapper)
 

@@ -6,6 +6,7 @@ function PostcardEditor({ imageUrl, onSave, onClose }) {
   const [side, setSide] = useState('front')
   const [frontDrawing, setFrontDrawing] = useState([])
   const [textContent, setTextContent] = useState('')
+  const canPublish = textContent.trim().length > 0
 
   const cardClass = useMemo(
     () => `flipper editor-flipper ${side === 'back' ? 'is-back' : ''}`,
@@ -13,12 +14,13 @@ function PostcardEditor({ imageUrl, onSave, onClose }) {
   )
 
   const save = () => {
+    if (!canPublish) return
     onSave({
       image_url: imageUrl,
       front_drawing: frontDrawing,
       back_drawing: [],
       text_content: textContent,
-      text_style: { align: 'left', size: 13 },
+      text_style: { align: 'center', size: 13 },
     })
   }
 
@@ -31,7 +33,6 @@ function PostcardEditor({ imageUrl, onSave, onClose }) {
             <button className="ghost" onClick={onClose}>
               Cancel
             </button>
-            <button onClick={save}>Publish</button>
           </div>
         </div>
 
@@ -46,13 +47,21 @@ function PostcardEditor({ imageUrl, onSave, onClose }) {
           </div>
         </div>
 
-        <button
-          type="button"
-          className="flip-btn flip-btn--labeled"
-          onClick={() => setSide(side === 'front' ? 'back' : 'front')}
-        >
-          Flip to {side === 'front' ? 'back' : 'front'}
-        </button>
+        <div className="editor-footer-actions">
+          <button
+            type="button"
+            className="flip-btn flip-btn--labeled"
+            onClick={() => setSide(side === 'front' ? 'back' : 'front')}
+          >
+            Flip to {side === 'front' ? 'back' : 'front'}
+          </button>
+
+          {canPublish ? (
+            <button type="button" className="flip-btn flip-btn--labeled" onClick={save}>
+              Mail your !
+            </button>
+          ) : null}
+        </div>
       </div>
     </div>
   )
