@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react'
+import { CARD_HEIGHT, CARD_WIDTH } from '../constants/presets'
 
 const COLORS = ['#111111', '#de3163', '#0f766e', '#2563eb', '#9333ea', '#eab308']
 const SIZES = [2, 4, 7]
@@ -51,20 +52,28 @@ function DrawingLayer({ value, onChange, multiply = false }) {
 
   const addPoint = (event) => {
     const rect = event.currentTarget.getBoundingClientRect()
+
+    // Normalize points and brush size into the postcard's canonical coordinate
+    // system (`CARD_WIDTH` x `CARD_HEIGHT`). This prevents drawings from
+    // "inflating" when the editor renders the card at a different pixel size.
+    const scaleX = CARD_WIDTH / rect.width
+    const scaleY = CARD_HEIGHT / rect.height
     const point = {
-      x: event.clientX - rect.left,
-      y: event.clientY - rect.top,
+      x: (event.clientX - rect.left) * scaleX,
+      y: (event.clientY - rect.top) * scaleY,
     }
 
     if (!drawingRef.current) {
       drawingRef.current = true
       setRedoStack([])
+
+      const baseSize = size * ((scaleX + scaleY) / 2)
       onChange([
         ...strokes,
         {
           points: [point],
           color: tool === 'eraser' ? '#ffffff' : color,
-          size,
+          size: baseSize,
           eraser: tool === 'eraser',
         },
       ])
@@ -143,10 +152,9 @@ function DrawingLayer({ value, onChange, multiply = false }) {
           {tool === 'eraser' ? <EraserIcon /> : <PenIcon />}
         </button>
         <button type="button" className="icon-button" onClick={undo} aria-label="Undo" title="Undo">
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M9 7 4 12l5 5" />
-            <path d="M20 12H4" />
-          </svg>
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M14.5 13.75L13.6213 12.7466C12.9188 11.945 12.2672 11.3263 11.3687 10.9122C10.5372 10.5291 9.49375 10.3294 8.11031 10.2922V13.5L1.5 7.875L8.11031 2.25V5.47531C10.3878 5.56906 12.0847 6.32156 13.1591 7.7175C14.0487 8.875 14.5 10.4747 14.5 12.4769V13.75Z" fill="black"/>
+        </svg>
         </button>
         <button type="button" className="icon-button" onClick={redo} aria-label="Redo" title="Redo">
           <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -158,6 +166,8 @@ function DrawingLayer({ value, onChange, multiply = false }) {
 
       <svg
         className={`drawing-surface ${multiply ? 'multiply' : ''}`}
+        viewBox={`0 0 ${CARD_WIDTH} ${CARD_HEIGHT}`}
+        preserveAspectRatio="none"
         onPointerDown={addPoint}
         onPointerMove={(e) => {
           if (drawingRef.current) addPoint(e)
