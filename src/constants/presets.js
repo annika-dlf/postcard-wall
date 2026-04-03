@@ -1,5 +1,7 @@
+// Postcard dimensions in app's canonical coordinate system.
+// Portrait layout with a 3:4 aspect ratio.
 export const CARD_WIDTH = 300
-export const CARD_HEIGHT = 200
+export const CARD_HEIGHT = 400
 
 /** Font for postcard back message (Google Fonts: Homemade Apple). */
 export const POSTCARD_MESSAGE_FONT_FAMILY = 'Homemade Apple'

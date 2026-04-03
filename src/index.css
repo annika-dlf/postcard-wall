@@ -91,7 +91,7 @@ button.ghost {
 .image-option img {
   display: block;
   width: 100%;
-  aspect-ratio: 3/2;
+  aspect-ratio: 3/4;
   object-fit: cover;
   border-radius: 0;
   filter: grayscale(1);
@@ -132,7 +132,7 @@ button.ghost {
 .flipper {
   position: relative;
   width: min(96vw, 360px);
-  height: min(70vw, 240px);
+  height: min(70vw, 480px);
   transform-style: preserve-3d;
   transition: transform 0.35s ease;
 }
@@ -140,7 +140,7 @@ button.ghost {
 .flipper.editor-flipper {
   width: 100%;
   height: auto;
-  aspect-ratio: 300 / 200;
+  aspect-ratio: 300 / 400;
   align-self: stretch;
 }
 

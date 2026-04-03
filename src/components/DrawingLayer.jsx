@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react'
 import { CARD_HEIGHT, CARD_WIDTH } from '../constants/presets'
 
-const COLORS = ['#111111', '#de3163', '#0f766e', '#2563eb', '#9333ea', '#eab308']
+const COLORS = ['#F7BBB0', '#C75555', '#EBA625', '#767B39', '#ABDBF2', '#5DA1C2']
 const SIZES = [2, 4, 7]
 
 function PenIcon() {
