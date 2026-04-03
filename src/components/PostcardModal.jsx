@@ -72,8 +72,10 @@ function PostcardModal({ postcard, onClose, onDownload, onShare }) {
   const [side, setSide] = useState('back')
 
   useEffect(() => {
-    setSide('back')
-  }, [postcard?.id])
+    const hasFrontDrawing = (postcard?.front_drawing || []).some((stroke) => (stroke.points || []).length > 1)
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSide(hasFrontDrawing ? 'front' : 'back')
+  }, [postcard?.id, postcard?.front_drawing])
 
   if (!postcard) return null
 

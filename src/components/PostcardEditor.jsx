@@ -58,7 +58,7 @@ function PostcardEditor({ imageUrl, onSave, onClose }) {
 
           {canPublish ? (
             <button type="button" className="flip-btn flip-btn--labeled" onClick={save}>
-              Mail your !
+              Mail your memory!
             </button>
           ) : null}
         </div>

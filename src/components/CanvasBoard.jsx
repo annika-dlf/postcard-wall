@@ -46,8 +46,13 @@ function CanvasBoard() {
 
     async function load() {
       if (!supabase) return
-      const { data } = await supabase.from('postcards').select('*').order('created_at', { ascending: true })
-      if (!mounted || !data) return
+      const { data, error } = await supabase.from('postcards').select('*').order('created_at', { ascending: true })
+      if (!mounted) return
+      if (error) {
+        console.error('[Supabase] Failed to load postcards:', error)
+        return
+      }
+      if (!data) return
       setPostcards(data)
       const bounds = getClusterBounds(data)
       const clusterCx = (bounds.minX + bounds.maxX) / 2
@@ -65,7 +70,13 @@ function CanvasBoard() {
     const channel = supabase
       .channel('postcards-inserts')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'postcards' }, (payload) => {
-        setPostcards((prev) => [...prev, payload.new])
+        setPostcards((prev) => {
+          const next = payload?.new
+          if (!next?.id) return prev
+          // Avoid duplicates when we also optimistically insert after `.insert()`.
+          if (prev.some((p) => p.id === next.id)) return prev
+          return [...prev, next]
+        })
       })
       .subscribe()
 
@@ -79,6 +90,7 @@ function CanvasBoard() {
     if (!deepLinkId || !postcards.length) return
     const found = postcards.find((p) => p.id === deepLinkId)
     if (!found) return
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setViewport((prev) => ({
       ...prev,
       x: size.width / 2 - found.x - CARD_WIDTH / 2,
@@ -192,16 +204,41 @@ function CanvasBoard() {
       return
     }
 
-    await supabase.from('postcards').insert(payload)
+    const { data, error } = await supabase.from('postcards').insert(payload).select('*').single()
+    if (error) {
+      console.error('[Supabase] Failed to insert postcard:', error)
+      // Fallback: still show the postcard on the canvas even if the insert fails.
+      const local = {
+        ...payload,
+        id: crypto.randomUUID(),
+        created_at: new Date().toISOString(),
+        download_count: 0,
+      }
+      setPostcards((prev) => (prev.some((p) => p.id === local.id) ? prev : [...prev, local]))
+    } else if (data?.id) {
+      setPostcards((prev) => (prev.some((p) => p.id === data.id) ? prev : [...prev, data]))
+    }
     setEditorOpen(false)
   }
 
   const handleDownload = async (postcard) => {
+    const strokeSvg = (strokes) =>
+      (strokes || [])
+        .map((stroke) => {
+          const points = stroke.points?.map((p) => `${p.x},${p.y}`).join(' ') || ''
+          if (!points) return ''
+          return `<polyline points="${points}" fill="none" stroke="${stroke.color}" stroke-width="${stroke.size}" stroke-linecap="round" stroke-linejoin="round" />`
+        })
+        .join('')
+
     const wrapper = document.createElement('div')
     wrapper.style.width = `${CARD_WIDTH}px`
     wrapper.style.background = '#fff'
     wrapper.style.padding = '12px'
-    wrapper.innerHTML = `<img src="${postcard.image_url}" width="${CARD_WIDTH}" height="${CARD_HEIGHT}" style="display:block;object-fit:cover;filter:grayscale(1);margin-bottom:12px" />
+    wrapper.innerHTML = `<div style="position:relative;width:${CARD_WIDTH}px;height:${CARD_HEIGHT}px;margin-bottom:12px">
+      <img src="${postcard.image_url}" width="${CARD_WIDTH}" height="${CARD_HEIGHT}" style="display:block;object-fit:cover;filter:grayscale(1)" />
+      <svg viewBox="0 0 ${CARD_WIDTH} ${CARD_HEIGHT}" style="position:absolute;inset:0;mix-blend-mode:multiply">${strokeSvg(postcard.front_drawing)}</svg>
+    </div>
       <div style="width:${CARD_WIDTH}px;height:${CARD_HEIGHT}px;background:#fffdf7;border:1px solid rgba(0,0,0,0.1);position:relative;overflow:hidden">
         <div style="position:absolute;inset:12px;overflow:auto;box-sizing:border-box">
           <div style="min-height:100%;width:100%;display:flex;align-items:center;justify-content:center;box-sizing:border-box">
