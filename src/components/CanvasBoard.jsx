@@ -18,6 +18,9 @@ import { useDebouncedValue } from '../hooks/useDebouncedValue'
 
 const INITIAL_VIEWPORT = { x: 0, y: 0, scale: 1 }
 const LONG_PRESS_MS = 500
+const GRID_STEP = CARD_WIDTH / 6 // 6 vertical grid columns per postcard width
+const GRID_LINE_COLOR = 'rgba(0,0,0,0.03)'
+const GRID_RANGE_PADDING = 100 // extra world units beyond viewport to avoid popping
 
 function CanvasBoard() {
   const navigate = useNavigate()
@@ -222,64 +225,213 @@ function CanvasBoard() {
   }
 
   const handleDownload = async (postcard) => {
-    const strokeSvg = (strokes) =>
-      (strokes || [])
-        .map((stroke) => {
-          const points = stroke.points?.map((p) => `${p.x},${p.y}`).join(' ') || ''
-          if (!points) return ''
-          return `<polyline points="${points}" fill="none" stroke="${stroke.color}" stroke-width="${stroke.size}" stroke-linecap="round" stroke-linejoin="round" />`
-        })
-        .join('')
+    const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 
-    const wrapper = document.createElement('div')
-    wrapper.style.width = `${CARD_WIDTH}px`
-    wrapper.style.background = '#fff'
-    wrapper.style.padding = '12px'
-    wrapper.innerHTML = `<div style="position:relative;width:${CARD_WIDTH}px;height:${CARD_HEIGHT}px;margin-bottom:12px">
-      <img src="${postcard.image_url}" width="${CARD_WIDTH}" height="${CARD_HEIGHT}" style="display:block;object-fit:cover;filter:grayscale(1)" />
-      <svg viewBox="0 0 ${CARD_WIDTH} ${CARD_HEIGHT}" style="position:absolute;inset:0;mix-blend-mode:multiply">${strokeSvg(postcard.front_drawing)}</svg>
-    </div>
-      <div style="width:${CARD_WIDTH}px;height:${CARD_HEIGHT}px;background:#fffdf7;border:1px solid rgba(0,0,0,0.1);position:relative;overflow:hidden">
-        <div style="position:absolute;inset:12px;overflow:auto;box-sizing:border-box">
-          <div style="min-height:100%;width:100%;display:flex;align-items:center;justify-content:center;box-sizing:border-box">
-            <div style="font-family:${POSTCARD_MESSAGE_FONT_STACK};font-size:${postcard.text_style?.size ?? 13}pt;text-align:center;white-space:pre-wrap;word-break:break-word;max-width:100%">${postcard.text_content || ''}</div>
-          </div>
-        </div>
-      </div>`
-    document.body.appendChild(wrapper)
+    const outerPadding = 12
+    const faceGap = 12
+    const totalWidth = CARD_WIDTH + outerPadding * 2
+    const totalHeight = CARD_HEIGHT * 2 + outerPadding * 2 + faceGap
 
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${CARD_WIDTH + 24}" height="${CARD_HEIGHT * 2 + 36}">
-      <foreignObject width="100%" height="100%">
-        <div xmlns="http://www.w3.org/1999/xhtml">${wrapper.innerHTML}</div>
-      </foreignObject>
-    </svg>`
-    const blob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' })
-    const url = URL.createObjectURL(blob)
-    const image = new Image()
-    image.onload = async () => {
-      const canvas = document.createElement('canvas')
-      canvas.width = CARD_WIDTH + 24
-      canvas.height = CARD_HEIGHT * 2 + 36
-      const ctx = canvas.getContext('2d')
-      ctx.drawImage(image, 0, 0)
-      const dataUrl = canvas.toDataURL('image/png')
-      const a = document.createElement('a')
-      a.href = dataUrl
-      a.download = `postcard-${postcard.id}.png`
-      a.click()
-      URL.revokeObjectURL(url)
-      document.body.removeChild(wrapper)
-
-      setPostcards((prev) =>
-        prev.map((p) =>
-          p.id === postcard.id ? { ...p, download_count: (p.download_count || 0) + 1 } : p,
-        ),
-      )
-      if (supabase) {
-        await supabase.rpc('increment_download_count', { card_id: postcard.id })
-      }
+    const front = {
+      x: outerPadding,
+      y: outerPadding,
+      w: CARD_WIDTH,
+      h: CARD_HEIGHT,
     }
-    image.src = url
+
+    const back = {
+      x: outerPadding,
+      y: outerPadding + CARD_HEIGHT + faceGap,
+      w: CARD_WIDTH,
+      h: CARD_HEIGHT,
+    }
+
+    const canvas = document.createElement('canvas')
+    // Increase output pixel density (keeps apparent size the same).
+    const resolutionScale = 3
+    canvas.width = totalWidth * resolutionScale
+    canvas.height = totalHeight * resolutionScale
+    const ctx = canvas.getContext('2d')
+
+    if (!ctx) return
+    ctx.setTransform(resolutionScale, 0, 0, resolutionScale, 0, 0)
+
+    const roundRectPath = (x, y, w, h, r) => {
+      const radius = Math.max(0, Math.min(r, w / 2, h / 2))
+      if (!radius) {
+        ctx.rect(x, y, w, h)
+        return
+      }
+      ctx.moveTo(x + radius, y)
+      ctx.arcTo(x + w, y, x + w, y + h, radius)
+      ctx.arcTo(x + w, y + h, x, y + h, radius)
+      ctx.arcTo(x, y + h, x, y, radius)
+      ctx.arcTo(x, y, x + w, y, radius)
+      ctx.closePath()
+    }
+
+    const drawBorderAndBackground = (face, { background = '#fffdf7', border = 'rgba(0,0,0,0.14)' } = {}) => {
+      ctx.save()
+      // Postcards in the modal are square-cornered.
+      ctx.beginPath()
+      roundRectPath(face.x, face.y, face.w, face.h, 0)
+      ctx.fillStyle = background
+      ctx.fill()
+      ctx.strokeStyle = border
+      ctx.lineWidth = 1
+      ctx.stroke()
+      ctx.restore()
+    }
+
+    const loadImage = async (src) => {
+      if (!src) return null
+      return await new Promise((resolve) => {
+        const img = new window.Image()
+        img.crossOrigin = 'anonymous'
+        img.onload = () => resolve(img)
+        img.onerror = () => resolve(null)
+        img.src = src
+      })
+    }
+
+    const getStrokePoints = (stroke) => {
+      const pts = (stroke?.points || [])
+        .map((p) => [Number(p?.x), Number(p?.y)])
+        .filter((xy) => Number.isFinite(xy[0]) && Number.isFinite(xy[1]))
+      return pts
+    }
+
+    const drawStrokes = (strokes, { composite = 'source-over' } = {}) => {
+      ctx.save()
+      ctx.globalCompositeOperation = composite
+      for (const stroke of strokes || []) {
+        const pts = getStrokePoints(stroke)
+        if (pts.length < 2) continue
+
+        ctx.beginPath()
+        ctx.moveTo(pts[0][0], pts[0][1])
+        for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1])
+
+        ctx.strokeStyle = stroke.color || '#000'
+        ctx.lineWidth = Number(stroke.size) || 2
+        ctx.lineCap = 'round'
+        ctx.lineJoin = 'round'
+        ctx.stroke()
+      }
+      ctx.restore()
+    }
+
+    const wrapTextToLines = (text, maxWidth) => {
+      const input = String(text ?? '')
+      const lines = []
+      for (const hardLine of input.split(/\r?\n/)) {
+        if (hardLine.length === 0) {
+          lines.push('')
+          continue
+        }
+        let current = ''
+        for (const ch of hardLine) {
+          const test = current + ch
+          if (ctx.measureText(test).width <= maxWidth || current.length === 0) {
+            current = test
+          } else {
+            lines.push(current)
+            current = ch
+          }
+        }
+        lines.push(current)
+      }
+      return lines
+    }
+
+    // Background (white around the two card faces).
+    ctx.fillStyle = '#fff'
+    ctx.fillRect(0, 0, totalWidth, totalHeight)
+
+    // Front face.
+    drawBorderAndBackground(front, { background: '#fffdf7' })
+    ctx.save()
+    ctx.beginPath()
+    roundRectPath(front.x, front.y, front.w, front.h, 0)
+    ctx.clip()
+
+    const frontImg = await loadImage(postcard.image_url)
+    if (frontImg) {
+      ctx.save()
+      ctx.filter = 'grayscale(1)'
+      ctx.drawImage(frontImg, front.x, front.y, front.w, front.h)
+      ctx.restore()
+    }
+
+    // Draw front strokes with multiply blending, matching the on-screen editor.
+    ctx.translate(front.x, front.y)
+    drawStrokes(postcard.front_drawing, { composite: 'multiply' })
+    ctx.restore()
+
+    // Back face.
+    drawBorderAndBackground(back, { background: '#fffefb' })
+    ctx.save()
+    ctx.beginPath()
+    roundRectPath(back.x, back.y, back.w, back.h, 0)
+    ctx.clip()
+
+    // Optional back drawing (if present).
+    ctx.translate(back.x, back.y)
+    drawStrokes(postcard.back_drawing, { composite: 'source-over' })
+    ctx.restore()
+
+    // Back message text.
+    const fontPt = postcard.text_style?.size ?? 13
+    const fontPx = fontPt * (96 / 72) // canvas uses px; CSS pt -> px conversion
+    const padding = 16
+    const inner = {
+      x: back.x + padding,
+      y: back.y + padding,
+      w: back.w - padding * 2,
+      h: back.h - padding * 2,
+    }
+
+    ctx.save()
+    // Clip to message area so we don't draw outside the back face.
+    ctx.beginPath()
+    ctx.rect(inner.x, inner.y, inner.w, inner.h)
+    ctx.clip()
+    ctx.fillStyle = '#141414'
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
+    ctx.font = `${fontPx}px ${POSTCARD_MESSAGE_FONT_STACK}`
+
+    const lines = wrapTextToLines(postcard.text_content || '', inner.w)
+    const lineHeight = fontPx * 1.2
+    const totalTextHeight = lines.length * lineHeight
+    const startY = inner.y + (inner.h - totalTextHeight) / 2 + lineHeight / 2
+
+    // Draw from top to bottom (pre-wrap behavior).
+    ctx.save()
+    ctx.beginPath()
+    ctx.rect(inner.x, inner.y, inner.w, inner.h)
+    ctx.clip()
+    for (let i = 0; i < lines.length; i++) {
+      ctx.fillText(lines[i], inner.x + inner.w / 2, startY + i * lineHeight)
+    }
+    ctx.restore()
+    ctx.restore()
+
+    // Download.
+    // Give the browser a tick to avoid any rare canvas capture timing issues.
+    await sleep(0)
+    const dataUrl = canvas.toDataURL('image/png')
+    const a = document.createElement('a')
+    a.href = dataUrl
+    a.download = `postcard-${postcard.id}.png`
+    a.click()
+
+    setPostcards((prev) =>
+      prev.map((p) => (p.id === postcard.id ? { ...p, download_count: (p.download_count || 0) + 1 } : p)),
+    )
+    if (supabase) {
+      await supabase.rpc('increment_download_count', { card_id: postcard.id })
+    }
   }
 
   const handleShare = async (postcard) => {
@@ -309,16 +461,51 @@ function CanvasBoard() {
       >
         <Layer>
           <Rect x={-10000} y={-10000} width={20000} height={20000} fill="#f4efe6" />
-          {Array.from({ length: 240 }).map((_, idx) => (
-            <Rect
-              key={idx}
-              x={-10000 + (idx % 20) * 1000}
-              y={-10000 + Math.floor(idx / 20) * 800}
-              width={1}
-              height={20000}
-              fill="rgba(0,0,0,0.03)"
-            />
-          ))}
+          {(() => {
+            // Convert viewport (screen space) to world space so grid stays stable while panning/zooming.
+            const leftWorld = -viewport.x / viewport.scale
+            const topWorld = -viewport.y / viewport.scale
+            const rightWorld = leftWorld + size.width / viewport.scale
+            const bottomWorld = topWorld + size.height / viewport.scale
+
+            const paddedLeft = leftWorld - GRID_RANGE_PADDING
+            const paddedTop = topWorld - GRID_RANGE_PADDING
+            const paddedRight = rightWorld + GRID_RANGE_PADDING
+            const paddedBottom = bottomWorld + GRID_RANGE_PADDING
+
+            const startX = Math.floor(paddedLeft / GRID_STEP) * GRID_STEP
+            const endX = Math.ceil(paddedRight / GRID_STEP) * GRID_STEP
+            const startY = Math.floor(paddedTop / GRID_STEP) * GRID_STEP
+            const endY = Math.ceil(paddedBottom / GRID_STEP) * GRID_STEP
+
+            const verticalLines = []
+            for (let x = startX; x <= endX; x += GRID_STEP) {
+              verticalLines.push(
+                <Rect key={`v-${x}`} x={x} y={paddedTop} width={1} height={paddedBottom - paddedTop} fill={GRID_LINE_COLOR} />,
+              )
+            }
+
+            const horizontalLines = []
+            for (let y = startY; y <= endY; y += GRID_STEP) {
+              horizontalLines.push(
+                <Rect
+                  key={`h-${y}`}
+                  x={paddedLeft}
+                  y={y}
+                  width={paddedRight - paddedLeft}
+                  height={1}
+                  fill={GRID_LINE_COLOR}
+                />,
+              )
+            }
+
+            return (
+              <>
+                {verticalLines}
+                {horizontalLines}
+              </>
+            )
+          })()}
           {visiblePostcards.map((p) => (
             <PostcardNode
               key={p.id}
