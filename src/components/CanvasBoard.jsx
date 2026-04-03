@@ -227,23 +227,30 @@ function CanvasBoard() {
   const handleDownload = async (postcard) => {
     const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 
-    const outerPadding = 12
-    const faceGap = 12
-    const totalWidth = CARD_WIDTH + outerPadding * 2
-    const totalHeight = CARD_HEIGHT * 2 + outerPadding * 2 + faceGap
+    // Download layout:
+    // 1080 x 1920 canvas
+    // - Front (photo) card: 560 x 747, 50px from left, 180px from top
+    // - Back (message) card: 560 x 747, 50px from right, overlapping the front by 140px
+    // - URL label centered at the bottom
+    const totalWidth = 1080
+    const totalHeight = 1920
 
-    const front = {
-      x: outerPadding,
-      y: outerPadding,
-      w: CARD_WIDTH,
-      h: CARD_HEIGHT,
+    const cardWidth = 560
+    const cardHeight = 747
+
+    const photo = {
+      x: 50,
+      y: 180,
+      w: cardWidth,
+      h: cardHeight,
     }
 
-    const back = {
-      x: outerPadding,
-      y: outerPadding + CARD_HEIGHT + faceGap,
-      w: CARD_WIDTH,
-      h: CARD_HEIGHT,
+    const message = {
+      x: totalWidth - 50 - cardWidth,
+      // Top of the back overlaps the front by 140px.
+      y: photo.y + cardHeight - 140,
+      w: cardWidth,
+      h: cardHeight,
     }
 
     const canvas = document.createElement('canvas')
@@ -270,16 +277,17 @@ function CanvasBoard() {
       ctx.closePath()
     }
 
-    const drawBorderAndBackground = (face, { background = '#fffdf7', border = 'rgba(0,0,0,0.14)' } = {}) => {
+    const drawCard = (face, background = '#ffffff') => {
+      // Card with shadow, no border outline.
       ctx.save()
-      // Postcards in the modal are square-cornered.
       ctx.beginPath()
-      roundRectPath(face.x, face.y, face.w, face.h, 0)
+      roundRectPath(face.x, face.y, face.w, face.h, 4)
+      ctx.shadowColor = 'rgba(0,0,0,0.25)'
+      ctx.shadowBlur = 8
+      ctx.shadowOffsetX = 4
+      ctx.shadowOffsetY = 4
       ctx.fillStyle = background
       ctx.fill()
-      ctx.strokeStyle = border
-      ctx.lineWidth = 1
-      ctx.stroke()
       ctx.restore()
     }
 
@@ -301,7 +309,10 @@ function CanvasBoard() {
       return pts
     }
 
-    const drawStrokes = (strokes, { composite = 'source-over' } = {}) => {
+    const drawStrokes = (
+      strokes,
+      { composite = 'source-over', scaleX = 1, scaleY = 1, strokeScale = (scaleX + scaleY) / 2 } = {},
+    ) => {
       ctx.save()
       ctx.globalCompositeOperation = composite
       for (const stroke of strokes || []) {
@@ -309,11 +320,11 @@ function CanvasBoard() {
         if (pts.length < 2) continue
 
         ctx.beginPath()
-        ctx.moveTo(pts[0][0], pts[0][1])
-        for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1])
+        ctx.moveTo(pts[0][0] * scaleX, pts[0][1] * scaleY)
+        for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0] * scaleX, pts[i][1] * scaleY)
 
         ctx.strokeStyle = stroke.color || '#000'
-        ctx.lineWidth = Number(stroke.size) || 2
+        ctx.lineWidth = (Number(stroke.size) || 2) * strokeScale
         ctx.lineCap = 'round'
         ctx.lineJoin = 'round'
         ctx.stroke()
@@ -344,51 +355,74 @@ function CanvasBoard() {
       return lines
     }
 
-    // Background (white around the two card faces).
-    ctx.fillStyle = '#fff'
-    ctx.fillRect(0, 0, totalWidth, totalHeight)
-
-    // Front face.
-    drawBorderAndBackground(front, { background: '#fffdf7' })
-    ctx.save()
-    ctx.beginPath()
-    roundRectPath(front.x, front.y, front.w, front.h, 0)
-    ctx.clip()
-
     const frontImg = await loadImage(postcard.image_url)
+
+    // Background: use the postcard image as a soft, full-bleed backdrop.
+    ctx.fillStyle = '#d8d0c1'
+    ctx.fillRect(0, 0, totalWidth, totalHeight)
     if (frontImg) {
       ctx.save()
-      ctx.filter = 'grayscale(1)'
-      ctx.drawImage(frontImg, front.x, front.y, front.w, front.h)
+      const coverScale = Math.max(totalWidth / frontImg.width, totalHeight / frontImg.height)
+      const coverW = frontImg.width * coverScale
+      const coverH = frontImg.height * coverScale
+      const offsetX = (totalWidth - coverW) / 2
+      const offsetY = (totalHeight - coverH) / 2
+      ctx.filter = 'blur(12px) grayscale(1)'
+      ctx.drawImage(frontImg, offsetX, offsetY, coverW, coverH)
       ctx.restore()
     }
 
-    // Draw front strokes with multiply blending, matching the on-screen editor.
-    ctx.translate(front.x, front.y)
-    drawStrokes(postcard.front_drawing, { composite: 'multiply' })
-    ctx.restore()
-
-    // Back face.
-    drawBorderAndBackground(back, { background: '#fffefb' })
+    // Slight wash over the background so the cards pop.
     ctx.save()
-    ctx.beginPath()
-    roundRectPath(back.x, back.y, back.w, back.h, 0)
-    ctx.clip()
-
-    // Optional back drawing (if present).
-    ctx.translate(back.x, back.y)
-    drawStrokes(postcard.back_drawing, { composite: 'source-over' })
+    ctx.globalAlpha = 0.85
+    ctx.fillStyle = '#d8d0c1'
+    ctx.fillRect(0, 0, totalWidth, totalHeight)
     ctx.restore()
 
-    // Back message text.
-    const fontPt = postcard.text_style?.size ?? 13
+    // Photo card (front).
+    drawCard(photo, '#111111')
+    if (frontImg) {
+      ctx.save()
+      ctx.beginPath()
+      roundRectPath(photo.x, photo.y, photo.w, photo.h, 4)
+      ctx.clip()
+      ctx.filter = 'grayscale(1)'
+      ctx.drawImage(frontImg, photo.x, photo.y, photo.w, photo.h)
+      ctx.restore()
+    }
+
+    // Draw front strokes on top of the photo (multiply blend).
+    ctx.save()
+    ctx.translate(photo.x, photo.y)
+    drawStrokes(postcard.front_drawing, {
+      composite: 'multiply',
+      scaleX: photo.w / CARD_WIDTH,
+      scaleY: photo.h / CARD_HEIGHT,
+    })
+    ctx.restore()
+
+    // Message card (back).
+    drawCard(message, '#fffefb')
+
+    // Optional back drawing (if present) on the message card.
+    ctx.save()
+    ctx.translate(message.x, message.y)
+    drawStrokes(postcard.back_drawing, {
+      composite: 'source-over',
+      scaleX: message.w / CARD_WIDTH,
+      scaleY: message.h / CARD_HEIGHT,
+    })
+    ctx.restore()
+
+    // Message text on the bottom card.
+    const fontPt = (postcard.text_style?.size ?? 13) * 1.3
     const fontPx = fontPt * (96 / 72) // canvas uses px; CSS pt -> px conversion
     const padding = 16
     const inner = {
-      x: back.x + padding,
-      y: back.y + padding,
-      w: back.w - padding * 2,
-      h: back.h - padding * 2,
+      x: message.x + padding,
+      y: message.y + padding,
+      w: message.w - padding * 2,
+      h: message.h - padding * 2,
     }
 
     ctx.save()
@@ -406,7 +440,7 @@ function CanvasBoard() {
     const totalTextHeight = lines.length * lineHeight
     const startY = inner.y + (inner.h - totalTextHeight) / 2 + lineHeight / 2
 
-    // Draw from top to bottom (pre-wrap behavior).
+    // Draw centered lines within the inner rect.
     ctx.save()
     ctx.beginPath()
     ctx.rect(inner.x, inner.y, inner.w, inner.h)
@@ -415,6 +449,31 @@ function CanvasBoard() {
       ctx.fillText(lines[i], inner.x + inner.w / 2, startY + i * lineHeight)
     }
     ctx.restore()
+    ctx.restore()
+
+    // URL label at the very bottom, centered (not clipped by message area).
+    const labelText = 'take-this-with-you.vercel.app/'
+    ctx.save()
+    ctx.font = `40px system-ui, -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif`
+    const labelMetrics = ctx.measureText(labelText)
+    const labelPaddingX = 24
+    const labelPaddingY = 24
+    const labelW = labelMetrics.width + labelPaddingX * 2
+    const labelH = 16 + labelPaddingY * 2
+    const labelX = totalWidth / 2 - labelW / 2
+    const labelY = totalHeight - 110 - labelH
+
+    ctx.shadowColor = 'rgba(0,0,0,0.25)'
+    ctx.shadowBlur = 8
+    ctx.shadowOffsetX = 4
+    ctx.shadowOffsetY = 4
+    ctx.fillStyle = '#ffffff'
+    ctx.fillRect(labelX, labelY, labelW, labelH)
+    ctx.shadowColor = 'transparent'
+    ctx.fillStyle = '#000000'
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
+    ctx.fillText(labelText, labelX + labelW / 2, labelY + labelH / 2)
     ctx.restore()
 
     // Download.

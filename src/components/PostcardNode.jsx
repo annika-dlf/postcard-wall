@@ -99,7 +99,7 @@ function PostcardNode({
               strokeWidth={stroke.size}
               lineCap="round"
               lineJoin="round"
-              globalCompositeOperation="source-over"
+              globalCompositeOperation="multiply"
             />
           )
         })}

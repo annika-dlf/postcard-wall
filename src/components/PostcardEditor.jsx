@@ -56,11 +56,14 @@ function PostcardEditor({ imageUrl, onSave, onClose }) {
             Flip to {side === 'front' ? 'back' : 'front'}
           </button>
 
-          {canPublish ? (
-            <button type="button" className="flip-btn flip-btn--labeled" onClick={save}>
-              Mail your memory!
-            </button>
-          ) : null}
+          <button
+            type="button"
+            className="flip-btn flip-btn--labeled"
+            onClick={save}
+            disabled={!canPublish}
+          >
+            Mail your memory!
+          </button>
         </div>
       </div>
     </div>

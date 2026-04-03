@@ -26,7 +26,7 @@ function postcardMarkup(postcard, side = 'front', { fill = false } = {}) {
     `
   }
 
-  const sizePt = postcard.text_style?.size ?? 13
+  const sizePt = (postcard.text_style?.size ?? 13) * 1.3
 
   return `
     <div style="${box}border-radius:0;overflow:hidden;background:#fffdf7;border:1px solid rgba(0,0,0,0.14)">
