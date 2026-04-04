@@ -5,7 +5,7 @@ function ImagePicker({ selectedImage, onSelect, onNext, onClose }) {
     <div className="sheet-overlay">
       <div className="sheet">
         <div className="sheet-header">
-          <h2>Choose an image</h2>
+          <h2>Pick your postcard 💌</h2>
           <button
             type="button"
             className="sheet-close-btn"
@@ -42,7 +42,7 @@ function ImagePicker({ selectedImage, onSelect, onNext, onClose }) {
         </div>
         <div className="sheet-actions image-picker-actions">
           <button type="button" disabled={!selectedImage} onClick={onNext}>
-            Continue
+            make my card :)
           </button>
         </div>
       </div>

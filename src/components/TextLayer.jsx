@@ -45,7 +45,7 @@ function TextLayer({ text, onTextChange }) {
             className="text-editor"
             value={text || ''}
             onChange={(e) => onTextChange(e.target.value)}
-            placeholder="Write your postcard message..."
+            placeholder="I will always remember ..."
             rows={1}
           />
         </div>

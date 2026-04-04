@@ -27,13 +27,17 @@ function PostcardEditor({ imageUrl, onSave, onClose }) {
   return (
     <div className="sheet-overlay">
       <div className="sheet editor-sheet">
-        <div className="sheet-header editor-create-header">
+        <div className="sheet-header">
           <div className="editor-title-block">
-            <h2>Create postcard</h2>
+            <h2>
+              {side === 'front'
+                ? 'Decorate your postcard 🖌️'
+                : 'Write your message ✍️'}
+            </h2>
             <p className="editor-subtitle">
               {side === 'front'
-                ? 'Draw on your postcard, then flip to write your message on the back.'
-                : 'Write your message, then mail it to the wall when you are ready.'}
+                ? 'Decorate, doodle, and add color to your campus memory, then flip to write your message on the back.'
+                : 'Reminisce about your days, share your traditions, then mail it to the wall when you are ready.'}
             </p>
           </div>
           <button

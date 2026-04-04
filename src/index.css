@@ -23,7 +23,8 @@ button {
   background: #222;
   color: #fff;
   padding: 10px 14px;
-  font-weight: 600;
+  font-weight: 500;
+  letter-spacing: 5%;
   font-family: 'Instrument Sans', system-ui, -apple-system, sans-serif;
 }
 
@@ -89,6 +90,7 @@ button.ghost {
 
 .sheet-header h2 {
   margin: 0;
+  font-size: 32px;
   flex: 1;
   min-width: 0;
 }
@@ -98,7 +100,7 @@ button.ghost {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  margin: -4px -4px 0 0;
+  margin: 4px 0px;
   padding: 4px;
   border: 0;
   background: transparent;
@@ -153,10 +155,6 @@ button.ghost {
   justify-content: space-between;
 }
 
-.editor-create-header {
-  margin-top: 12px;
-}
-
 .editor-title-block {
   flex: 1;
   min-width: 0;
@@ -167,7 +165,7 @@ button.ghost {
 }
 
 .editor-subtitle {
-  margin: 8px 0 0;
+  margin: 0;
   font-size: 0.875rem;
   line-height: 1.4;
   color: rgba(0, 0, 0, 0.62);
@@ -245,7 +243,6 @@ button.ghost {
   height: auto;
   min-height: 40px;
   padding: 10px 14px;
-  font-weight: 600;
 }
 
 .editor-footer-actions {
@@ -254,7 +251,6 @@ button.ghost {
   flex-direction: column;
   align-items: stretch;
   gap: 10px;
-  margin-top: 12px;
   padding-bottom: 16px;
 }
 
