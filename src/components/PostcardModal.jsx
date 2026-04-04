@@ -1,5 +1,12 @@
 import { useEffect, useState } from 'react'
-import { CARD_HEIGHT, CARD_WIDTH, POSTCARD_MESSAGE_FONT_STACK } from '../constants/presets'
+import {
+  CARD_HEIGHT,
+  CARD_WIDTH,
+  POSTCARD_MESSAGE_FONT_STACK,
+  POSTCARD_TEXT_INSET,
+  POSTCARD_TEXT_LINE_HEIGHT,
+  postcardMessageFontSizePt,
+} from '../constants/presets'
 
 function strokeSvg(strokes) {
   return (strokes || [])
@@ -20,20 +27,20 @@ function postcardMarkup(postcard, side = 'front', { fill = false } = {}) {
   if (side === 'front') {
     return `
       <div style="${box}border-radius:0;overflow:hidden;background:#fffdf7;border:1px solid rgba(0,0,0,0.14)">
-        <img src="${postcard.image_url}" style="display:block;width:100%;height:100%;object-fit:cover;filter:grayscale(1)" />
+        <img src="${postcard.image_url}" style="display:block;width:100%;height:100%;object-fit:cover" />
         <svg viewBox="0 0 ${CARD_WIDTH} ${CARD_HEIGHT}" style="position:absolute;inset:0;mix-blend-mode:multiply">${strokeSvg(postcard.front_drawing)}</svg>
       </div>
     `
   }
 
-  const sizePt = (postcard.text_style?.size ?? 13) * 1.3
+  const sizePt = postcardMessageFontSizePt(postcard.text_style)
 
   return `
     <div style="${box}border-radius:0;overflow:hidden;background:#fffdf7;border:1px solid rgba(0,0,0,0.14)">
       <svg viewBox="0 0 ${CARD_WIDTH} ${CARD_HEIGHT}" style="position:absolute;inset:0">${strokeSvg(postcard.back_drawing)}</svg>
-      <div style="position:absolute;inset:16px;overflow:auto;box-sizing:border-box">
+      <div style="position:absolute;inset:${POSTCARD_TEXT_INSET}px;overflow:hidden;box-sizing:border-box">
         <div style="min-height:100%;width:100%;display:flex;align-items:center;justify-content:center;box-sizing:border-box">
-          <div style="font-family:${POSTCARD_MESSAGE_FONT_STACK};font-size:${sizePt}pt;text-align:center;white-space:pre-wrap;word-break:break-word;max-width:100%;color:#141414">${(postcard.text_content || '').replaceAll('<', '&lt;').replaceAll('>', '&gt;')}</div>
+          <div style="font-family:${POSTCARD_MESSAGE_FONT_STACK};font-size:${sizePt}pt;line-height:${POSTCARD_TEXT_LINE_HEIGHT};text-align:center;white-space:pre-wrap;overflow-wrap:break-word;word-break:break-word;max-width:100%;color:#141414">${(postcard.text_content || '').replaceAll('<', '&lt;').replaceAll('>', '&gt;')}</div>
         </div>
       </div>
     </div>

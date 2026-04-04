@@ -7,13 +7,26 @@ import ImagePicker from './ImagePicker'
 import PostcardEditor from './PostcardEditor'
 import PostcardNode from './PostcardNode'
 import PostcardModal from './PostcardModal'
+import { wrapPostcardTextLines } from '../lib/postcardTextLayout'
 import {
   getClusterBounds,
   randomPlacementOffset,
   randomRotation,
   resolveOverlap,
 } from '../lib/postcardUtils'
-import { CARD_HEIGHT, CARD_WIDTH, POSTCARD_MESSAGE_FONT_STACK, PRESET_IMAGES } from '../constants/presets'
+import {
+  CARD_HEIGHT,
+  CARD_WIDTH,
+  POSTCARD_MESSAGE_FONT_FAMILY,
+  POSTCARD_MESSAGE_FONT_STACK,
+  POSTCARD_EXPORT_FONT_CALIBRATION,
+  POSTCARD_TEXT_INSET,
+  POSTCARD_TEXT_INNER_WIDTH,
+  POSTCARD_TEXT_LINE_HEIGHT,
+  PRESET_IMAGES,
+  postcardMessageFontSizePt,
+  withResolvedPresetImage,
+} from '../constants/presets'
 import { useDebouncedValue } from '../hooks/useDebouncedValue'
 
 const INITIAL_VIEWPORT = { x: 0, y: 0, scale: 1 }
@@ -56,7 +69,7 @@ function CanvasBoard() {
         return
       }
       if (!data) return
-      setPostcards(data)
+      setPostcards(data.map(withResolvedPresetImage))
       const bounds = getClusterBounds(data)
       const clusterCx = (bounds.minX + bounds.maxX) / 2
       const clusterCy = (bounds.minY + bounds.maxY) / 2
@@ -74,7 +87,7 @@ function CanvasBoard() {
       .channel('postcards-inserts')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'postcards' }, (payload) => {
         setPostcards((prev) => {
-          const next = payload?.new
+          const next = withResolvedPresetImage(payload?.new)
           if (!next?.id) return prev
           // Avoid duplicates when we also optimistically insert after `.insert()`.
           if (prev.some((p) => p.id === next.id)) return prev
@@ -219,7 +232,9 @@ function CanvasBoard() {
       }
       setPostcards((prev) => (prev.some((p) => p.id === local.id) ? prev : [...prev, local]))
     } else if (data?.id) {
-      setPostcards((prev) => (prev.some((p) => p.id === data.id) ? prev : [...prev, data]))
+      setPostcards((prev) =>
+        prev.some((p) => p.id === data.id) ? prev : [...prev, withResolvedPresetImage(data)],
+      )
     }
     setEditorOpen(false)
   }
@@ -332,30 +347,11 @@ function CanvasBoard() {
       ctx.restore()
     }
 
-    const wrapTextToLines = (text, maxWidth) => {
-      const input = String(text ?? '')
-      const lines = []
-      for (const hardLine of input.split(/\r?\n/)) {
-        if (hardLine.length === 0) {
-          lines.push('')
-          continue
-        }
-        let current = ''
-        for (const ch of hardLine) {
-          const test = current + ch
-          if (ctx.measureText(test).width <= maxWidth || current.length === 0) {
-            current = test
-          } else {
-            lines.push(current)
-            current = ch
-          }
-        }
-        lines.push(current)
-      }
-      return lines
-    }
-
-    const frontImg = await loadImage(postcard.image_url)
+    const stampSrc = `${import.meta.env.BASE_URL}Stamp.png`
+    const [frontImg, stampImg] = await Promise.all([
+      loadImage(postcard.image_url),
+      loadImage(stampSrc),
+    ])
 
     // Background: use the postcard image as a soft, full-bleed backdrop.
     ctx.fillStyle = '#d8d0c1'
@@ -367,7 +363,7 @@ function CanvasBoard() {
       const coverH = frontImg.height * coverScale
       const offsetX = (totalWidth - coverW) / 2
       const offsetY = (totalHeight - coverH) / 2
-      ctx.filter = 'blur(12px) grayscale(1)'
+      ctx.filter = 'blur(12px)'
       ctx.drawImage(frontImg, offsetX, offsetY, coverW, coverH)
       ctx.restore()
     }
@@ -386,7 +382,6 @@ function CanvasBoard() {
       ctx.beginPath()
       roundRectPath(photo.x, photo.y, photo.w, photo.h, 4)
       ctx.clip()
-      ctx.filter = 'grayscale(1)'
       ctx.drawImage(frontImg, photo.x, photo.y, photo.w, photo.h)
       ctx.restore()
     }
@@ -414,15 +409,27 @@ function CanvasBoard() {
     })
     ctx.restore()
 
-    // Message text on the bottom card.
-    const fontPt = (postcard.text_style?.size ?? 13) * 1.3
-    const fontPx = fontPt * (96 / 72) // canvas uses px; CSS pt -> px conversion
-    const padding = 16
+    // Message text on the bottom card (inset + font scale match editor / modal on CARD_WIDTH×CARD_HEIGHT).
+    const padX = (POSTCARD_TEXT_INSET * message.w) / CARD_WIDTH
+    const padY = (POSTCARD_TEXT_INSET * message.h) / CARD_HEIGHT
     const inner = {
-      x: message.x + padding,
-      y: message.y + padding,
-      w: message.w - padding * 2,
-      h: message.h - padding * 2,
+      x: message.x + padX,
+      y: message.y + padY,
+      w: message.w - padX * 2,
+      h: message.h - padY * 2,
+    }
+    const exportTextScale = inner.w / POSTCARD_TEXT_INNER_WIDTH
+    const fontPt = postcardMessageFontSizePt(postcard.text_style)
+    const fontPx =
+      fontPt * (96 / 72) * exportTextScale * POSTCARD_EXPORT_FONT_CALIBRATION
+
+    if (document.fonts?.load) {
+      try {
+        await document.fonts.load(`${fontPx}px ${POSTCARD_MESSAGE_FONT_FAMILY}`)
+      } catch {
+        /* ignore */
+      }
+      await document.fonts.ready
     }
 
     ctx.save()
@@ -435,10 +442,11 @@ function CanvasBoard() {
     ctx.textBaseline = 'middle'
     ctx.font = `${fontPx}px ${POSTCARD_MESSAGE_FONT_STACK}`
 
-    const lines = wrapTextToLines(postcard.text_content || '', inner.w)
-    const lineHeight = fontPx * 1.2
+    const lines = wrapPostcardTextLines(ctx, postcard.text_content || '', inner.w)
+    const lineHeight = fontPx * POSTCARD_TEXT_LINE_HEIGHT
     const totalTextHeight = lines.length * lineHeight
-    const startY = inner.y + (inner.h - totalTextHeight) / 2 + lineHeight / 2
+    const topPad = totalTextHeight <= inner.h ? (inner.h - totalTextHeight) / 2 : 0
+    const startY = inner.y + topPad + lineHeight / 2
 
     // Draw centered lines within the inner rect.
     ctx.save()
@@ -450,6 +458,15 @@ function CanvasBoard() {
     }
     ctx.restore()
     ctx.restore()
+
+    // Stamp: 386×236, 180px from canvas left, 270px from canvas bottom.
+    const stampW = 386
+    const stampH = 236
+    const stampX = 180
+    const stampY = totalHeight - 270 - stampH
+    if (stampImg) {
+      ctx.drawImage(stampImg, stampX, stampY, stampW, stampH)
+    }
 
     // URL label at the very bottom, centered (not clipped by message area).
     const labelText = 'take-this-with-you.vercel.app/'

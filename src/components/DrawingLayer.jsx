@@ -157,10 +157,9 @@ function DrawingLayer({ value, onChange, multiply = false }) {
         </svg>
         </button>
         <button type="button" className="icon-button" onClick={redo} aria-label="Redo" title="Redo">
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="m15 7 5 5-5 5" />
-            <path d="M4 12h16" />
-          </svg>
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M1.5 12.4769C1.5 10.4747 1.95125 8.875 2.84094 7.71875C3.91531 6.32281 5.61219 5.56969 7.88969 5.47656V2.25L14.5 7.875L7.88969 13.5V10.2922C6.50688 10.3294 5.46281 10.5291 4.63125 10.9122C3.73281 11.3263 3.08125 11.945 2.37875 12.7466L1.5 13.75V12.4769Z" fill="black"/>
+        </svg>
         </button>
       </div>
 
