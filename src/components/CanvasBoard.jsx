@@ -347,14 +347,14 @@ function CanvasBoard() {
       ctx.restore()
     }
 
-    const stampSrc = `${import.meta.env.BASE_URL}Stamp.png`
+    const stampSrc = `${import.meta.env.BASE_URL}stamp.png`
     const [frontImg, stampImg] = await Promise.all([
       loadImage(postcard.image_url),
       loadImage(stampSrc),
     ])
 
     // Background: use the postcard image as a soft, full-bleed backdrop.
-    ctx.fillStyle = '#d8d0c1'
+    ctx.fillStyle = '#000000'
     ctx.fillRect(0, 0, totalWidth, totalHeight)
     if (frontImg) {
       ctx.save()
@@ -368,10 +368,10 @@ function CanvasBoard() {
       ctx.restore()
     }
 
-    // Slight wash over the background so the cards pop.
+    // Dark overlay over the background so the cards pop.
     ctx.save()
     ctx.globalAlpha = 0.85
-    ctx.fillStyle = '#d8d0c1'
+    ctx.fillStyle = '#000000'
     ctx.fillRect(0, 0, totalWidth, totalHeight)
     ctx.restore()
 
