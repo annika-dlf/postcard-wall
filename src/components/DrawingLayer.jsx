@@ -151,16 +151,18 @@ function DrawingLayer({ value, onChange, multiply = false }) {
         >
           {tool === 'eraser' ? <EraserIcon /> : <PenIcon />}
         </button>
-        <button type="button" className="icon-button" onClick={undo} aria-label="Undo" title="Undo">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
-          <path d="M14.5 13.75L13.6213 12.7466C12.9188 11.945 12.2672 11.3263 11.3687 10.9122C10.5372 10.5291 9.49375 10.3294 8.11031 10.2922V13.5L1.5 7.875L8.11031 2.25V5.47531C10.3878 5.56906 12.0847 6.32156 13.1591 7.7175C14.0487 8.875 14.5 10.4747 14.5 12.4769V13.75Z" fill="black"/>
-        </svg>
-        </button>
-        <button type="button" className="icon-button" onClick={redo} aria-label="Redo" title="Redo">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
-          <path d="M1.5 12.4769C1.5 10.4747 1.95125 8.875 2.84094 7.71875C3.91531 6.32281 5.61219 5.56969 7.88969 5.47656V2.25L14.5 7.875L7.88969 13.5V10.2922C6.50688 10.3294 5.46281 10.5291 4.63125 10.9122C3.73281 11.3263 3.08125 11.945 2.37875 12.7466L1.5 13.75V12.4769Z" fill="black"/>
-        </svg>
-        </button>
+        <div className="drawing-tools-undo-redo" role="group" aria-label="Undo and redo">
+          <button type="button" className="icon-button" onClick={undo} aria-label="Undo" title="Undo">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M14.5 13.75L13.6213 12.7466C12.9188 11.945 12.2672 11.3263 11.3687 10.9122C10.5372 10.5291 9.49375 10.3294 8.11031 10.2922V13.5L1.5 7.875L8.11031 2.25V5.47531C10.3878 5.56906 12.0847 6.32156 13.1591 7.7175C14.0487 8.875 14.5 10.4747 14.5 12.4769V13.75Z" fill="black"/>
+            </svg>
+          </button>
+          <button type="button" className="icon-button" onClick={redo} aria-label="Redo" title="Redo">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M1.5 12.4769C1.5 10.4747 1.95125 8.875 2.84094 7.71875C3.91531 6.32281 5.61219 5.56969 7.88969 5.47656V2.25L14.5 7.875L7.88969 13.5V10.2922C6.50688 10.3294 5.46281 10.5291 4.63125 10.9122C3.73281 11.3263 3.08125 11.945 2.37875 12.7466L1.5 13.75V12.4769Z" fill="black"/>
+            </svg>
+          </button>
+        </div>
       </div>
 
       <svg

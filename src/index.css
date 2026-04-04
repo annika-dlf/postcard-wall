@@ -8,9 +8,13 @@ body,
   margin: 0;
   width: 100%;
   height: 100%;
-  font-family: Outfit, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  font-family: 'Instrument Serif', Georgia, 'Times New Roman', serif;
   background-color: #f4efe6;
   color: #1a1a1a;
+}
+
+p {
+  font-family: 'Instrument Sans', system-ui, -apple-system, sans-serif;
 }
 
 button {
@@ -20,6 +24,7 @@ button {
   color: #fff;
   padding: 10px 14px;
   font-weight: 600;
+  font-family: 'Instrument Sans', system-ui, -apple-system, sans-serif;
 }
 
 button:disabled {
@@ -75,6 +80,42 @@ button.ghost {
   padding: 16px 16px 0;
 }
 
+.sheet-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.sheet-header h2 {
+  margin: 0;
+  flex: 1;
+  min-width: 0;
+}
+
+.sheet-close-btn {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: -4px -4px 0 0;
+  padding: 4px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  line-height: 0;
+  color: inherit;
+}
+
+.sheet-close-btn:focus-visible {
+  outline: 2px solid #1f2937;
+  outline-offset: 2px;
+}
+
+.image-picker-actions button {
+  width: 100%;
+}
+
 .image-grid {
   margin-top: 10px;
   display: grid;
@@ -101,18 +142,35 @@ button.ghost {
 }
 
 .sheet-actions,
-.editor-header,
-.editor-actions,
 .modal-controls {
   display: flex;
   gap: 10px;
   align-items: center;
 }
 
-.sheet-actions,
-.editor-header {
+.sheet-actions {
   margin-top: 12px;
   justify-content: space-between;
+}
+
+.editor-create-header {
+  margin-top: 12px;
+}
+
+.editor-title-block {
+  flex: 1;
+  min-width: 0;
+}
+
+.editor-title-block h2 {
+  margin: 0;
+}
+
+.editor-subtitle {
+  margin: 8px 0 0;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  color: rgba(0, 0, 0, 0.62);
 }
 
 .sheet-actions {
@@ -193,11 +251,16 @@ button.ghost {
 .editor-footer-actions {
   width: 100%;
   display: flex;
-  align-items: center;
-  justify-content: flex-start;
+  flex-direction: column;
+  align-items: stretch;
   gap: 10px;
   margin-top: 12px;
   padding-bottom: 16px;
+}
+
+.editor-footer-actions .flip-btn--labeled {
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .drawing-tool-wrap {
@@ -213,6 +276,13 @@ button.ghost {
   gap: 6px;
   z-index: 5;
   flex-wrap: wrap;
+}
+
+.drawing-tools-undo-redo {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 6px;
+  flex-shrink: 0;
 }
 
 .swatches,
@@ -356,8 +426,6 @@ button.ghost {
 
 .modal-card {
   box-sizing: border-box;
-  width: 100%;
-  max-width: 100%;
   background: transparent;
   border-radius: 0;
   padding: 0 0 20px;

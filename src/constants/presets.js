@@ -3,6 +3,9 @@
 export const CARD_WIDTH = 300
 export const CARD_HEIGHT = 400
 
+/** Max width of the postcard preview column in the full-screen modal (phone-scale cap). */
+export const MODAL_POSTCARD_MAX_WIDTH_PX = 512
+
 /** Font for postcard back message (Google Fonts: Homemade Apple). */
 export const POSTCARD_MESSAGE_FONT_FAMILY = 'Homemade Apple'
 export const POSTCARD_MESSAGE_FONT_STACK = `'${POSTCARD_MESSAGE_FONT_FAMILY}', cursive`

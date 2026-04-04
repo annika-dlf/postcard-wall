@@ -27,13 +27,37 @@ function PostcardEditor({ imageUrl, onSave, onClose }) {
   return (
     <div className="sheet-overlay">
       <div className="sheet editor-sheet">
-        <div className="editor-header">
-          <h2>Create postcard</h2>
-          <div className="editor-actions">
-            <button className="ghost" onClick={onClose}>
-              Cancel
-            </button>
+        <div className="sheet-header editor-create-header">
+          <div className="editor-title-block">
+            <h2>Create postcard</h2>
+            <p className="editor-subtitle">
+              {side === 'front'
+                ? 'Draw on your postcard, then flip to write your message on the back.'
+                : 'Write your message, then mail it to the wall when you are ready.'}
+            </p>
           </div>
+          <button
+            type="button"
+            className="sheet-close-btn"
+            onClick={onClose}
+            aria-label="Close"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="26"
+              height="26"
+              viewBox="0 0 26 26"
+              fill="none"
+              aria-hidden="true"
+            >
+              <path
+                d="M21.3333 21.3333L4.2666 4.2666M21.3333 4.2666L4.2666 21.3333"
+                stroke="black"
+                strokeWidth="3"
+                strokeLinecap="round"
+              />
+            </svg>
+          </button>
         </div>
 
         <div className={cardClass}>

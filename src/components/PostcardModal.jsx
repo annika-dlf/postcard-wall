@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import {
   CARD_HEIGHT,
   CARD_WIDTH,
+  MODAL_POSTCARD_MAX_WIDTH_PX,
   POSTCARD_MESSAGE_FONT_STACK,
   POSTCARD_TEXT_INSET,
   POSTCARD_TEXT_LINE_HEIGHT,
@@ -66,7 +67,7 @@ function ShareIcon() {
 function CloseIcon() {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 26 26" fill="none">
-      <path d="M21.3333 21.3333L4.2666 4.2666M21.3333 4.2666L4.2666 21.3333" stroke="white" stroke-width="3" stroke-linecap="round"/>
+      <path d="M21.3333 21.3333L4.2666 4.2666M21.3333 4.2666L4.2666 21.3333" stroke="white" strokeWidth="3" strokeLinecap="round" />
     </svg>
   )
 }
@@ -99,7 +100,11 @@ function PostcardModal({ postcard, onClose, onDownload, onShare }) {
       >
         <CloseIcon />
       </button>
-      <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="modal-card"
+        style={{ width: `min(100%, ${MODAL_POSTCARD_MAX_WIDTH_PX}px)` }}
+        onClick={(e) => e.stopPropagation()}
+      >
         <div
           className="modal-postcard"
           style={{ aspectRatio: `${CARD_WIDTH} / ${CARD_HEIGHT}` }}
