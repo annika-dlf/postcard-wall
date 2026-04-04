@@ -347,14 +347,16 @@ function CanvasBoard() {
       ctx.restore()
     }
 
-    const stampSrc = `${import.meta.env.BASE_URL}stamp.png`
+    const stampSrc = `${import.meta.env.BASE_URL}stamp2.png`
     const [frontImg, stampImg] = await Promise.all([
       loadImage(postcard.image_url),
       loadImage(stampSrc),
     ])
 
-    // Background: use the postcard image as a soft, full-bleed backdrop.
-    ctx.fillStyle = '#000000'
+    // Background: soft full-bleed blur, then tint with backdrop hue (deep navy reads as
+    // blue-black; a flat semi-transparent fill on gray blur alone looks neutral/black).
+    const backdropColor = '#0a1428'
+    ctx.fillStyle = backdropColor
     ctx.fillRect(0, 0, totalWidth, totalHeight)
     if (frontImg) {
       ctx.save()
@@ -366,12 +368,24 @@ function CanvasBoard() {
       ctx.filter = 'blur(12px)'
       ctx.drawImage(frontImg, offsetX, offsetY, coverW, coverH)
       ctx.restore()
+      ctx.save()
+      ctx.globalCompositeOperation = 'color'
+      ctx.fillStyle = backdropColor
+      ctx.fillRect(0, 0, totalWidth, totalHeight)
+      ctx.restore()
     }
 
-    // Dark overlay over the background so the cards pop.
+    // Slight deepen so the cards read clearly without washing the tint back to gray/black.
     ctx.save()
-    ctx.globalAlpha = 0.85
-    ctx.fillStyle = '#000000'
+    ctx.globalAlpha = 0.35
+    ctx.fillStyle = backdropColor
+    ctx.fillRect(0, 0, totalWidth, totalHeight)
+    ctx.restore()
+
+    // Extra dim: pull the full plate darker and closer to navy.
+    ctx.save()
+    ctx.globalAlpha = 0.42
+    ctx.fillStyle = backdropColor
     ctx.fillRect(0, 0, totalWidth, totalHeight)
     ctx.restore()
 
@@ -484,10 +498,10 @@ function CanvasBoard() {
     ctx.shadowBlur = 8
     ctx.shadowOffsetX = 4
     ctx.shadowOffsetY = 4
-    ctx.fillStyle = '#ffffff'
+    ctx.fillStyle = '#fffefb'
     ctx.fillRect(labelX, labelY, labelW, labelH)
     ctx.shadowColor = 'transparent'
-    ctx.fillStyle = '#000000'
+    ctx.fillStyle = backdropColor
     ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'
     ctx.fillText(labelText, labelX + labelW / 2, labelY + labelH / 2)

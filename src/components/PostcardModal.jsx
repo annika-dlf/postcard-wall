@@ -75,6 +75,20 @@ function ShareIcon() {
   )
 }
 
+function CloseIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M6 6l12 12M18 6L6 18"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
 function PostcardModal({ postcard, onClose, onDownload, onShare }) {
   const [side, setSide] = useState('back')
 
@@ -92,6 +106,17 @@ function PostcardModal({ postcard, onClose, onDownload, onShare }) {
 
   return (
     <div className="modal-overlay" onClick={onClose}>
+      <button
+        type="button"
+        className="modal-close-btn"
+        onClick={(e) => {
+          e.stopPropagation()
+          onClose()
+        }}
+        aria-label="Close preview"
+      >
+        <CloseIcon />
+      </button>
       <div className="modal-card" onClick={(e) => e.stopPropagation()}>
         <div
           className="modal-postcard"
