@@ -27,7 +27,7 @@ export const POSTCARD_TEXT_INNER_HEIGHT = CARD_HEIGHT - POSTCARD_TEXT_INSET * 2
  * After scaling type by export card width vs canonical inner width, canvas text still reads
  * ~1.6× the modal; apply this so the PNG matches the modal preview.
  */
-export const POSTCARD_EXPORT_FONT_CALIBRATION = 1 / 1.6
+export const POSTCARD_EXPORT_FONT_CALIBRATION = 1 / 1.2
 
 /** Old default presets (Unsplash); rows in DB may still reference these. */
 const LEGACY_PRESET_IMAGE_URLS = [

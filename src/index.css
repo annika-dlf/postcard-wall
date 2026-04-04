@@ -382,6 +382,7 @@ button.ghost {
   color: #fff;
   cursor: pointer;
   line-height: 0;
+  filter: drop-shadow(0 0 3px #000);
 }
 
 .modal-close-btn:focus-visible {
